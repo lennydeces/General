@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .topnav {
+      overflow: hidden;
+      background-color: #333;
+    }
+
+    .topnav a {
+      float: left;
+      color: #f2f2f2;
+      text-align: center;
+      padding: 14px 16px;
+      text-decoration: none;
+      font-size: 17px;
+    }
+
+    .topnav a:hover {
+      background-color: #ddd;
+      color: black;
+    }
+
+    .topnav a.split {
+      float: right;
+      background-color: #04AA6D;
+      color: white;
+    }
+
+    .topnav .search-container {
+      float: right;
+    }
+
+    .topnav input[type=text] {
+      padding: 6px;
+      margin-top: 8px;
+      font-size: 17px;
+      border: none;
+    }
+
+    .topnav .search-container button {
+      float: right;
+      padding: 6px 10px;
+      margin-top: 8px;
+      margin-right: 16px;
+      background: #ddd;
+      font-size: 17px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .topnav .search-container button:hover {
+      background: #ccc;
+    }
+
+    .marker-tooltip {
+      background-color: rgba(255, 255, 255, 0.8);
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      width: 200px;
+    }
+
+    #Logo {background-color: white;}
+    #Home {background-color: white;}
+    #About {background-color: white;}
+    #Contact {background-color: white;}
+    #Help {background-color: white;}
+    
+    .tabnav {
+      display: none;
+    }
+    
+    #big-frame-container {
+      display: grid;
+      grid-template-columns: 3fr 0fr;
+      gap: 10px;
+      padding-left: 0.5px;
+      padding-right: 0.5px;
+      background-color: white;
+      border: 5px solid #ddd;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    #map-container {
+      display: grid;
+      grid-template-columns: 5fr 3fr;
+      gap: 10px;
+      padding-left: 0.5px;
+      padding-right: 0.5px;
+    }
+
+    #map, #mapping, #simplemap {
+      height: 500px;
+      width: calc(100% - 5px);
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    #frame {
+      height: 500px;
+      width: calc(100% - 5px);
+      background-color: #f0f0f0;
+    }
+    
+    #subframe {
+      display: grid;
+      grid-template-rows: 1fr 3fr;
+      gap: 10px;
+      background-color: white;
+      padding: 0px;
+    }
+
+    .subframe-top, .subframe-bottom {
+      padding: 10px;
+    }
+
+    .subframe-top {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border: 5px solid #eee;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .subframe-bottom {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border: 5px solid #eee;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #subframe h3 {
+      margin-top: 0;
+    }
+
+    #subframe p {
+      margin-bottom: 0;
+    }
+
+    .category {
+      margin-bottom: 5px;
+    }
+
+    .star-rating {
+      color: gold;
+    }
+
+    .star-rating .fa-star-o {
+      color: #ccc;
+    }
+
+    #legend {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #000;
+    }
+
+    .legend-label {
+      margin-left: 5px;
+    }
+
+    @media screen and (max-width: 600px) {
+      .topnav a, .topnav input[type=text], .topnav .search-container button {
+        float: none;
+        display: block;
+        text-align: left;
+        width: 100%;
+        margin: 0;
+        padding: 14px;
+      }
+      .topnav input[type=text] {
+        border: 1px solid #ccc;
+      }
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .heading {
+      margin-bottom: 20px;
+      font-size: 3rem;
+      color: black;
+    }
+
+    .wheel-container {
+      position: relative;
+    }
+
+    canvas {
+      box-shadow: black 5px 8px 5px;
+    }
+
+    .spin-btn {
+      background-color: #326765;
+      color: white;
+      font-size: 1.5rem;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: black 5px 8px 5px;
+      transition: all 0.3s ease;
+    }
+
+    .spin-btn:hover:not(:disabled) {
+      background-color: #3d7f7d;
+      transform: translate(1px, 1px);
+      box-shadow: black 5px 10px 8px;
+    }
+
+    .spin-btn:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 2rem;
+      color: #ccda46;
+      text-shadow: 2px 2px 4px black;
+    }
+  </style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="active" onclick="showLogo()"><img src="logo.png" alt="Logo" style="height: 20px;"></a>
+  <a class="active" onclick="showContent('Home')" href="#"> Home</a>
+  <a onclick="showContent('About')" href="#"> About</a>
+  <a onclick="showContent('Contact')" href="#"> Contact</a>
+  <a onclick="showHelp()" href="#" class="split" target="_blank">Help</a>
+  <div class="search-container">
+    <form action="/action_page.php">
+      <input type="text" placeholder="Search.." name="search">
+      <button type="submit"><i class="fa fa-search"></i></button>
+    </form>
+  </div>
+</div>
+
+<div id="Logo" class="tabnav">
+  <div class="container">
+    <div class="heading">Lucky Number Wheel</div>
+    <div class="wheel-container">
+      <canvas id="wheel" width="500" height="500"></canvas>
+    </div>
+    <button class="spin-btn" onclick="spinWheel()">Spin</button>
+    <div class="result" id="result"></div>
+  </div>
+</div>
+
+<div id="Home" class="tabnav">
+  <div id="big-frame-container">
+    <div id="map-container">
+      <div id="map" class="map"></div>
+      <div id="subframe">
+        <div class="subframe-top">
+          <h3>Subframe Title</h3>
+          <p>This is some top text inside the subframe.</p>
+        </div>
+        <div class="subframe-bottom">
+          <h3>Color Legend</h3>
+          <div id="legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #ff0000;"></div>
+              <div class="legend-label">High</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #00ff00;"></div>
+              <div class="legend-label">Medium</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #0000ff;"></div>
+              <div class="legend-label">Low</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="About" class="tabnav">
+  <div id="big-frame-container">
+    <div id="map-container">
+      <div id="mapping" class="mapping"></div>
+      <div id="subframe">
+        <div class="subframe-top">
+          <h3>Subframe Title</h3>
+          <p>This is some top text inside the subframe.</p>
+        </div>
+        <div class="subframe-bottom">
+          <h3>Color Legend</h3>
+          <div id="legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #ff0000;"></div>
+              <div class="legend-label">High</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #00ff00;"></div>
+              <div class="legend-label">Medium</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #0000ff;"></div>
+              <div class="legend-label">Low</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="Contact" class="tabnav">
+  <div id="big-frame-container">
+    <div id="map-container">
+      <div id="simplemap" class="simplemap"></div>
+      <div id="subframe">
+        <div class="subframe-top">
+          <h3>Subframe Title</h3>
+          <p>This is some top text inside the subframe.</p>
+        </div>
+        <div class="subframe-bottom">
+          <h3>Color Legend</h3>
+          <div id="legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #ff0000;"></div>
+              <div class="legend-label">High</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #00ff00;"></div>
+              <div class="legend-label">Medium</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: #0000ff;"></div>
+              <div class="legend-label">Low</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="Help" class="tabnav">
+  <h3>Help</h3>
+  <p>Help us...</p>
+</div>
+
+<script>
+  showContent('Logo');
+  var markers = [];
+  var hoveredMarker = null;
+  var currentTab = 'Logo';
+  var simplemap;
+
+  function showLogo() {
+    var tabcontent = document.getElementsByClassName("tabnav");
+    for (var i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    document.getElementById('Logo').style.display = "block";
+    currentTab = 'Logo';
+  }
+
+  function showContent(tabName) {
+    var tabcontent = document.getElementsByClassName("tabnav");
+    for (var i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    document.getElementById(tabName).style.display = "block";
+    currentTab = tabName;
+
+    setTimeout(function() {
+      switch(tabName) {
+        case 'Home':
+          initMaps();
+          break;
+        case 'About':
+          initAboutMap();
+          break;
+        case 'Contact':
+          initMap();
+          break;
+      }
+    }, 100);
+  }
+
+  function showHelp() {
+    var prevTab = currentTab;
+    var tabcontent = document.getElementsByClassName("tabnav");
+    for (var i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    document.getElementById('Help').style.display = "block";
+    currentTab = prevTab;
+    document.getElementById(currentTab).style.display = "block";
+    window.open("https://www.morpc.org/", "_blank");
+  }
+
+  // Lucky Number Wheel Script
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const spinBtn = document.querySelector('.spin-btn');
+  const resultText = document.getElementById('result');
+
+  const sections = [
+    { number: 1000, angle: 20 },
+    { number: 500, angle: 30 },
+    { number: 200, angle: 40 },
+    { number: 100, angle: 50 },
+    { number: 50, angle: 60 },
+    { number: 20, angle: 70 },
+    { number: 10, angle: 50 },
+    { number: 1, angle: 40 }
+  ];
+
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+    '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB'
+  ];
+
+  let currentAngle = 0;
+  let spinning = false;
+
+  function drawWheel(angle) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let startAngle = angle * Math.PI / 180;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 200;
+
+    sections.forEach((section, index) => {
+      const angleRad = (section.angle * Math.PI) / 180;
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, startAngle, startAngle + angleRad);
+      ctx.fillStyle = colors[index % colors.length];
+      ctx.fill();
+      
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(startAngle + angleRad / 2);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText(section.number, radius - 20, 5);
+      ctx.restore();
+
+      startAngle += angleRad;
+    });
+
+    ctx.beginPath();
+    ctx.moveTo(canvas.width - 30, centerY - 15);
+    ctx.lineTo(canvas.width - 30, centerY + 15);
+    ctx.lineTo(canvas.width - 50, centerY);
+    ctx.fillStyle = '#ccda46';
+    ctx.fill();
+  }
+
+  function spinWheel() {
+    if (spinning) return;
+    spinning = true;
+    spinBtn.disabled = true;
+    resultText.textContent = '';
+
+    const spinTime = 5000;
+    const spins = Math.floor(Math.random() * 5) + 5;
+    const totalRotation = spins * 360 + Math.random() * 360;
+    let startTime = null;
+
+    function animate(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const progress = (timestamp - startTime) / spinTime;
+      
+      if (progress < 1) {
+        currentAngle = easeOut(progress) * totalRotation;
+        drawWheel(currentAngle);
+        requestAnimationFrame(animate);
+      } else {
+        currentAngle = totalRotation % 360;
+        drawWheel(currentAngle);
+        determineWinner();
+        spinning = false;
+        spinBtn.disabled = false;
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function determineWinner() {
+    const adjustedAngle = (360 - (currentAngle % 360)) % 360;
+    let accumulatedAngle = 0;
+
+    for (const section of sections) {
+      accumulatedAngle += section.angle;
+      if (adjustedAngle < accumulatedAngle) {
+        resultText.textContent = `You won: ${section.number}!`;
+        return;
+      }
+    }
+  }
+
+  drawWheel(currentAngle);
+
+  // Home Map
+  function initMaps() {
+    var maps = document.querySelectorAll('.tabnav #map');
+    maps.forEach(function(map) {
+      var leafletMap = L.map(map).setView([40, -98.0], 4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(leafletMap);
+      
+      var cities = [
+        { name: 'Ithaca', location: [42.4440, -76.5019], ratings: {Transportation: 3, Safety: 5, Health: 5, Environment: 5}, iconUrl: 'nyc-icon.png' },
+        { name: 'Cortland', location: [42.6012, -76.1805], ratings: {Transportation: 2, Safety: 5, Health: 4, Environment: 4}, iconUrl: 'nyc-icon.png' },
+        { name: 'New York', location: [40.7128, -74.0060], ratings: {Transportation: 5, Safety: 3, Health: 3, Environment: 3}, iconUrl: 'nyc-icon.png' },
+        { name: 'Washington DC', location: [38.9072, -77.0369], ratings: {Transportation: 5, Safety: 4, Health: 5, Environment: 4}, iconUrl: 'nyc-icon.png' },
+        { name: 'Columbus', location: [39.9625, -83.0032], ratings: {Transportation: 3, Safety: 4, Health: 5, Environment: 4}, iconUrl: 'nyc-icon.png' },
+        { name: 'Raleigh', location: [35.7796, -78.6382], ratings: {Transportation: 4, Safety: 4, Health: 4, Environment: 4}, iconUrl: 'nyc-icon.png' }
+      ];
+
+      leafletMap.on('click', function(e) {
+        removeMarker();
+        var maxDistance = 50000;
+
+        cities.forEach(function(city) {
+          var cityLocation = L.latLng(city.location[0], city.location[1]);
+          var clickedLocation = L.latLng(e.latlng.lat, e.latlng.lng);
+          var distance = cityLocation.distanceTo(clickedLocation);
+
+          if (distance <= maxDistance) {
+            var categoriesHTML = '';
+            Object.keys(city.ratings).forEach(function(category) {
+              var starsHTML = '';
+              for (var i = 0; i < city.ratings[category]; i++) {
+                starsHTML += '<i class="fa fa-star star-rating"></i>';
+              }
+              for (var j = city.ratings[category]; j < 5; j++) {
+                starsHTML += '<i class="fa fa-star-o star-rating"></i>';
+              }
+              categoriesHTML += '<div class="category"><span class="category-label">' + category + ': </span>' + starsHTML + '</div>';
+            });
+
+            var popupContent = '<b>' + city.name + '</b><br>' + categoriesHTML + '<br>';
+            var icon = L.divIcon({
+              className: 'custom-icon',
+              html: '<div class="marker-tooltip">' + popupContent + '</div>',
+              iconSize: [30, 42],
+              iconAnchor: [15, 42],
+              popupAnchor: [0, -42],
+            });
+
+            var marker = L.marker(city.location, { icon: icon }).addTo(leafletMap);
+            
+            marker.on('mouseover', function() { hoveredMarker = marker; });
+            marker.on('mouseout', function() { hoveredMarker = null; });
+            markers.push(marker);
+          }
+        });
+      });
+    });
+  }
+
+  function removeMarker() {
+    markers = markers.filter(function(marker) {
+      if (hoveredMarker && marker == hoveredMarker) {
+        marker.remove();
+        return false;
+      }
+      return true;
+    });
+  }
+
+  // About Map
+  function initAboutMap() {
+    simplemap = L.map('mapping', {
+      closePopupOnClick: false
+    }).setView([40, -98.0], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(simplemap);
+
+    var markers = [
+      { latlng: [42.3555, -71.0565], popup: '<b>Boston</b><br><hr>-Boston Common<br><a href="https://www.boston.gov/parks/boston-common" target="_blank">Freedom Trail</a><br>' },
+      { latlng: [40.7128, -74.0060], popup: '<b>New York</b><br><hr>-Louis Vuitton<br><a href="https://us.louisvuitton.com/eng-us/point-of-sale/usa/louis-vuitton-new-york-5th-avenue" target="_blank">Trunk</a><br><br>-Rockefeller Center<br><a href="https://www.rockefellercenter.com/attractions/top-of-the-rock-observation-deck/" target="_blank">Top of The Rock</a><br><br>-Central Park, The High Line<br><a href="https://www.centralparknyc.org/" target="_blank">Elevation</a><br><br>-The Vessel, Little Island<br><a href="https://www.hudsonyardsnewyork.com/discover/vessel" target="_blank">Plaza</a>' },
+      { latlng: [43.1566, -77.6088], popup: '<b>Rochester</b><br><hr>-The Strong National Museum of Play<br><a href="https://www.museumofplay.org/" target="_blank">Play</a><br>' },
+      { latlng: [42.4440, -76.5019], popup: '<b>Ithaca</b><br><hr>-Cornell University<br><a href="https://www.cornell.edu/" target="_blank">Gorge</a><br>' },
+      { latlng: [38.9072, -77.0369], popup: '<b>Washington D.C.</b><br><hr>-National Mall<br><a href="https://www.nps.gov/nama/index.htm" target="_blank">Diamond</a>' },
+      { latlng: [38.0302, -78.4769], popup: '<b>Charlottesville</b><br><hr>-Charlottesville–Albemarle Airport<br><a href="https://gocho.com/" target="_blank">Rotunda</a>' },
+      { latlng: [35.7796, -78.6382], popup: '<b>Raleigh</b><br><hr>-Raleigh-Durham International Airport<br><a href="https://www.rdu.com/" target="_blank">First in Flight</a>' },
+      { latlng: [35.7890, -78.7798], popup: '<b>Cary</b><br><hr>-Downtown Cary Park<br><a href="https://www.carync.gov/recreation-enjoyment/parks-greenways-environment/parks/downtown-park" target="_blank">Public Space</a>' },
+      { latlng: [35.9557, -80.0053], popup: '<b>High Point</b><br><hr>-World \'s Largest Chest of Drawers<br><a href="https://www.visitnc.com/listing/9SZB/world-s-largest-chest-of-drawers" target="_blank">Furniture</a>' },
+      { latlng: [35.2216, -80.8401], popup: '<b>Charlotte</b><br><hr>-Sullenberger Aviation Museum<br><a href="https://www.sullenbergeraviation.org/" target="_blank">Flight Simulator</a>' },
+      { latlng: [35.0458, -85.3094], popup: '<b>Chattanooga</b><br><hr>-Incline Railway<br><a href="https://ridetheincline.com/" target="_blank">Lookout Mountain</a>' },
+      { latlng: [32.0809, -81.0912], popup: '<b>Savannah</b><br><hr>-Savannah/Hilton Head International Airport<br><a href="https://savannahairport.com/" target="_blank">Forrest Gump</a><br><br>-Chippewa Square<br><a href="https://www.savannah.com/chippewa-square/" target="_blank">Fountain</a><br><br>-Arts<br><a href="https://www.scadartscafe.com/" target="_blank">Double-Decker Bus</a>' },
+      { latlng: [26.1224, -80.1373], popup: '<b>Fort Lauderdale</b><br><hr>-Water Taxi<br><a href="https://watertaxi.com/" target="_blank">Waterway Transport</a><br>' },
+      { latlng: [26.0099, -80.1591], popup: '<b>Hollywood</b><br><hr>-Guitar Hotel<br><a href="https://casino.hardrock.com/hollywood/hotel/the-guitar-hotel" target="_blank">Casino</a>' },
+      { latlng: [42.3297, -83.0425], popup: '<b>Detroit</b><br><hr>-Henry Ford Museum<br><a href="https://www.thehenryford.org/" target="_blank">Transportation Mode</a><br><br>-Detroit People Mover<br><a href="https://www.thepeoplemover.com/" target="_blank">Frontier Downtown</a>' },
+      { latlng: [39.9625, -83.0032], popup: '<b>Columbus</b><br><hr>-Columbus Commons<br><a href="https://columbuscommons.org/" target="_blank">Gathering Space</a><br><br>-Topiary Park<br><a href="https://www.ohiotraveler.com/topiary-garden/" target="_blank">Artistic Garden</a>' },
+      { latlng: [39.1031, -84.5120], popup: '<b>Cincinnati</b><br><hr>-Cincinnati Union Terminal<br><a href="https://www.cincymuseum.org/union-terminal/" target="_blank">History Museum</a>' },
+      { latlng: [41.8781, -87.6298], popup: '<b>Chicago</b><br><hr>-Maggie Daley Park<br><a href="https://maggiedaleypark.com/" target="_blank">Mini Golf</a>' },
+      { latlng: [38.6274, -90.1982], popup: '<b>St. Louis</b><br><hr>-City Museum<br><a href="https://citymuseum.org/" target="_blank">Waste Utilization</a><br><br>-St. Louis Union Station<br><a href="https://www.stlouisunionstation.com/" target="_blank">Adventure Park</a>' },
+      { latlng: [44.8408, -93.2983], popup: '<b>Bloomington</b><br><hr>-Mall of America<br><a href="https://www.mallofamerica.com/" target="_blank">Amusement Park</a>' },
+      { latlng: [41.2565, -95.9345], popup: '<b>Omaha</b><br><hr>-Gene Leahy Mall at The RiverFront<br><a href="https://theriverfrontomaha.com/visit-the-riverfront/gene-leahy-mall/" target="_blank">Playground</a><br><br>-Lauritzen Gardens<br><a href="https://www.lauritzengardens.org/About/Kenefick_Park/" target="_blank">Kenefick Park</a>' },
+      { latlng: [39.0997, -94.5786], popup: '<b>Kansas City</b><br><hr>-Kansas City Union Station<br><a href="https://sciencecity.unionstation.org/" target="_blank">Science City</a>' },
+      { latlng: [35.4689, -97.5195], popup: '<b>Oklahoma City</b><br><hr>-Will Rogers Airport<br><a href="https://flyokc.com/" target="_blank">Indian Tribes</a><br><br>-Bricktown OKC<br><a href="https://www.bricktownokc.com/" target="_blank">Water Taxi</a>' },
+      { latlng: [32.7555, -97.3308], popup: '<b>Fort Worth</b><br><hr>-Fort Worth Stockyards<br><a href="https://www.fortworthstockyards.org/" target="_blank">Cattle Run</a>' },
+      { latlng: [44.0805, -103.2310], popup: '<b>Rapid City</b><br><hr>-Main Street Square<br><a href="https://www.visitrapidcity.com/downtown-rapid-city/main-street-square/" target="_blank">President Statue</a>' },
+      { latlng: [39.7392, -104.9903], popup: '<b>Denver</b><br><hr>-Denver International Airport<br><a href="https://www.flydenver.com/" target="_blank">Rocky Mountains</a>' },
+      { latlng: [40.0190, -105.2747], popup: '<b>Boulder</b><br><hr>-University of Colorado Boulder<br><a href="https://www.colorado.edu/" target="_blank">Geoscience</a>' },
+      { latlng: [40.7606, -111.8881], popup: '<b>Salt Lake City</b><br><hr>-City Creek Center<br><a href="https://shopcitycreekcenter.com/" target="_blank">Rain Garden</a>' },
+      { latlng: [33.4482, -112.0777], popup: '<b>Phoenix</b><br><hr>-Phoenix Sky Harbor International Airport<br><a href="https://www.skyharbor.com/" target="_blank">Sun Devils</a>' },
+      { latlng: [36.1716, -115.1391], popup: '<b>Las Vegas</b><br><hr>-Sphere<br><a href="https://www.thesphere.com/" target="_blank">Emoji Motion</a>' },
+      { latlng: [45.5152,-122.6784], popup: '<b>Portland</b><br><hr>-Portland International Airport<br><a href="https://www.flypdx.com/" target="_blank">Sensory Room</a>' }
+    ];
+
+    markers.forEach(function(markerData) {
+      var marker = L.marker(markerData.latlng).addTo(simplemap).bindPopup(markerData.popup, { autoClose: false });
+      marker.on('click', function() {
+        marker.openPopup();
+      });
+    });
+  }
+
+  // Contact Map
+  function initMap() {
+    var map = L.map('simplemap').setView([40, -98.0], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    var dotOrlando = L.circleMarker([28.5384, -81.3789], {
+      radius: 0,
+      color: 'green',
+      fillColor: 'green',
+      fillOpacity: 1
+    }).addTo(map).bindPopup('Orlando');
+    var dotMiami = L.circleMarker([25.7617, -80.1918], {
+      radius: 0,
+      color: 'green',
+      fillColor: 'green',
+      fillOpacity: 1
+    }).addTo(map).bindPopup('Miami');
+    
+    var polyline = L.polyline([
+      [37.7749, -122.4194],
+      [34.0522, -118.2437],
+      [36.1699, -115.1398]
+    ], {color: 'blue'}).addTo(map);
+
+    var polygon = L.polygon([
+      [29.7604, -95.3698],
+      [30.2672, -97.7431],
+      [32.7767, -96.7970]
+    ], {color: 'red'}).addTo(map);
+
+    polyline.bindPopup("This is a polyline connecting San Francisco, Los Angeles, and Las Vegas.");
+    polygon.bindPopup("This is a polygon connecting Houston, Austin, and Dallas.");
+  }
+</script>
+</body>
+</html>
